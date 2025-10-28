@@ -31,6 +31,9 @@ def handle_button_click(update, context):
         show_recipe(query, context) 
     elif query.data == 'subscribe': 
         subscribe(query, context)
+    elif data == 'check_payment':  # Добавил часть кода (Антон)
+        from tg_bot.subscription_stats import check_payment
+        check_payment(query, context)
 
     
 
