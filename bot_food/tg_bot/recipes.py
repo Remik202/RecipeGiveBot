@@ -10,6 +10,8 @@ logger = logging.getLogger(__name__)
 from demo_data.demo_db import data 
 
 def dish(query: Update, context: CallbackContext):
+    # Проверка подписки - Добавил еще код (Антон)
+    from tg_bot.subscription_stats import check_subscription
     # Сначала проверяем наличие подписки
     subscribed = context.user_data.get('subscribed', False)
 
