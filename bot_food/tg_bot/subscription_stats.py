@@ -1,5 +1,6 @@
 import json
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CallbackContext
 # Глобальная константа ограничения попыток
 ATTEMPT_LIMIT = 3
 
@@ -37,26 +38,61 @@ def get_total_revenue():
     stats = load_stats()
     return stats['total_revenue']
 
-def subscribe(update, context):
+def subscribe(query, context):
     """
-    Обработчик подписки. Регистрирует нового подписчика и увеличивает статистику.
+    открывает страницу оплаты подписки.
     """
-    
+    query.answer()  # Подтверждаем нажатие кнопки
 
-    # Установка статуса пользователя как подписавшегося
-    context.user_data['subscribed'] = True
-    context.user_data['attempts_left'] = ATTEMPT_LIMIT  # Используем глобальное значение ATTEMPT_LIMIT
-    
-    if 'attempts_left' in context.user_data:
-        del context.user_data['attempts_left']
+    payment_url = "https://visionary-starship-998050.netlify.app"
 
     keyboard = [
-        [InlineKeyboardButton("В меню ", callback_data='start')]
+        [InlineKeyboardButton("Перейти к оплате", url=payment_url)],
+        [InlineKeyboardButton("Я оплатил", callback_data='check_payment')],
+        [InlineKeyboardButton("Назад", callback_data='start')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    # Увеличение общей статистики подписок
+
+    query.edit_message_text(
+        text="Оформление подписки\n\n"
+             "Стоимость: 500 руб./месяц\n\n"
+             "Демо-процесс:\n"
+             "1. Нажмите «Перейти к оплате»\n"
+             "2. Заполните форму данными:\n"
+             "3. Нажмите «Отправить»\n"
+             "4. Вернитесь и нажмите «Я оплатил»\n"
+             "5. Подписка активируется автоматически",
+        reply_markup=reply_markup
+    )
+
+def check_payment(query, context):
+    """
+    Проверка оплаты и активация подписки
+    """
+    query.answer()
+
+    # Активируем подписку
+    context.user_data['subscribed'] = True
+
+    # if 'attempts_left' in context.user_data:
+    #     del context.user_data['attempts_left']
+
     add_subscription()
 
-    # Отправляем сообщение пользователю
-    update.edit_message_text(text="Поздравляем! Ваша подписка успешно активирована.",reply_markup=reply_markup) 
+    keyboard = [
+        [InlineKeyboardButton("Получить рецепт", callback_data='dish')],
+        [InlineKeyboardButton("В меню", callback_data='start')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    query.edit_message_text(
+        text="Поздравляем! Ваша подписка успешно активирована!\n\n"
+             "Теперь вы можете получать неограниченное количество рецептов!",
+        reply_markup=reply_markup
+    )
+
+
+def check_subscription(context, user_id=None):
+    """Проверяет, есть ли у пользователя активная подписка"""
+    return context.user_data.get('subscribed', False)
     
