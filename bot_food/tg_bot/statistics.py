@@ -14,7 +14,7 @@ def statistics(file_path, key):
 
     if key in data:
         value = data.get(key)
-        return value
+        return f"Количество подписок {value}"
     else:
         print(f'Ошибка: Ключ "{key}" не найден.')
 
