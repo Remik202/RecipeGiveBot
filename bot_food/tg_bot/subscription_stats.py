@@ -1,12 +1,12 @@
 import json
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
-# Глобальная константа ограничения попыток
-ATTEMPT_LIMIT = 3
 
-# Остальные части кода остаются прежними
+
+ATTEMPT_LIMIT = 3
 SUBSCRIPTION_PRICE = 500
 STATS_FILE = "subscription_stats.json"
+
 
 def load_stats():
     """Загрузка статистики подписчиков."""
@@ -16,10 +16,12 @@ def load_stats():
     except FileNotFoundError:
         return {'total_subscriptions': 0, 'total_revenue': 0}
 
+
 def save_stats(stats: dict):
     """Сохранение обновленной статистики подписчиков."""
     with open(STATS_FILE, 'w', encoding='utf-8') as file:
         json.dump(stats, file, indent=4, ensure_ascii=False)
+
 
 def add_subscription():
     """Обработка новой подписки."""
@@ -28,15 +30,18 @@ def add_subscription():
     stats['total_revenue'] = stats['total_subscriptions'] * SUBSCRIPTION_PRICE
     save_stats(stats)
 
+
 def get_total_subscriptions():
     """Возвращает общее число подписок."""
     stats = load_stats()
     return stats['total_subscriptions']
 
+
 def get_total_revenue():
     """Возвращает общий доход от подписок."""
     stats = load_stats()
     return stats['total_revenue']
+
 
 def subscribe(query, context):
     """
@@ -53,17 +58,23 @@ def subscribe(query, context):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
+    text = (
+        "Оформление подписки\n\n"
+        "Стоимость: 500 руб./месяц\n\n"
+        "Демо-процесс:\n"
+        "1. Нажмите «Перейти к оплате»\n"
+        "2. Заполните форму данными:\n"
+        "3. Нажмите «Отправить»\n"
+        "4. Вернитесь и нажмите «Я оплатил»\n"
+        "5. Подписка активируется автоматически"
+    )
+
     query.edit_message_text(
-        text="Оформление подписки\n\n"
-             "Стоимость: 500 руб./месяц\n\n"
-             "Демо-процесс:\n"
-             "1. Нажмите «Перейти к оплате»\n"
-             "2. Заполните форму данными:\n"
-             "3. Нажмите «Отправить»\n"
-             "4. Вернитесь и нажмите «Я оплатил»\n"
-             "5. Подписка активируется автоматически",
+        text=text,
+        parse_mode="Markdown"
         reply_markup=reply_markup
     )
+
 
 def check_payment(query, context):
     """
@@ -71,12 +82,7 @@ def check_payment(query, context):
     """
     query.answer()
 
-    # Активируем подписку
     context.user_data['subscribed'] = True
-
-    # if 'attempts_left' in context.user_data:
-    #     del context.user_data['attempts_left']
-
     add_subscription()
 
     keyboard = [
@@ -88,6 +94,7 @@ def check_payment(query, context):
     query.edit_message_text(
         text="Поздравляем! Ваша подписка успешно активирована!\n\n"
              "Теперь вы можете получать неограниченное количество рецептов!",
+        parse_mode='Markdown',
         reply_markup=reply_markup
     )
 
@@ -95,4 +102,3 @@ def check_payment(query, context):
 def check_subscription(context, user_id=None):
     """Проверяет, есть ли у пользователя активная подписка"""
     return context.user_data.get('subscribed', False)
-    
