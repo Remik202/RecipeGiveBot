@@ -3,7 +3,7 @@ from telegram.ext import Updater, CommandHandler, CallbackQueryHandler
 from dotenv import load_dotenv
 from tg_bot.start import *
 from tg_bot.recipes import dish, show_recipe
-from tg_bot.subscription_stats import subscribe
+from tg_bot.subscription_stats import subscribe, check_payment
 from tg_bot.company_information import info
 import logging
 
@@ -35,7 +35,6 @@ def handle_button_click(update, context):
     elif query.data == 'subscribe':
         subscribe(query, context)
     elif data == 'check_payment':
-        from tg_bot.subscription_stats import check_payment
         check_payment(query, context)
 
 
@@ -55,3 +54,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
