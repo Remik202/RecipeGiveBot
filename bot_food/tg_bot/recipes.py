@@ -6,17 +6,27 @@ import logging
 import os
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 def dish(query: Update, context: CallbackContext):
-    
+    # Получаем ID пользователя
+    if query.message:
+        user_id = query.message.from_user.id
+    elif query.callback_query:
+        user_id = query.callback_query.from_user.id
+    else:
+        user_id = None
+
+    # Проверяем подписку через функцию
     from tg_bot.subscription_stats import check_subscription
-    subscribed = context.user_data.get('subscribed', False)
+    subscribed = check_subscription(context, user_id)
+    context.user_data[user_id] = subscribed
 
     if subscribed:
-
+        # Код для пользователь с подпиской
         all_dishes = data.copy()
 
         shuffled_keys = context.user_data.get('shuffled_keys', None)
@@ -41,15 +51,18 @@ def dish(query: Update, context: CallbackContext):
         BASE_DIR = os.path.dirname(os.path.abspath(__file__))
         IMAGES_FOLDER = os.path.join(BASE_DIR, "..", "demo_data", "images")
         absolute_image_path = os.path.join(
-            IMAGES_FOLDER, os.path.basename(relative_image_path))
+            IMAGES_FOLDER, os.path.basename(relative_image_path)
+        )
 
         message_text = f"🍽️ Ваше блюдо: *{chosen_dish['Name']}*"
         buttons = [
             [
                 InlineKeyboardButton(
-                    "Следующее блюдо", callback_data='next_dish'),
+                    "Следующее блюдо", callback_data='next_dish'
+                ),
                 InlineKeyboardButton(
-                    "Показать рецепт", callback_data='show_recipe')
+                    "Показать рецепт", callback_data='show_recipe'
+                )
             ]
         ]
         reply_markup = InlineKeyboardMarkup(buttons)
@@ -63,8 +76,8 @@ def dish(query: Update, context: CallbackContext):
                 reply_markup=reply_markup
             )
     else:
-
-        attempts_left = context.user_data.get('attempts_left', 0)
+        # Код для пользователей не имеющих подписку
+        attempts_left = context.user_data.get('attempts_left', 3)
 
         if attempts_left > 0:
 
@@ -124,6 +137,10 @@ def show_recipe(query: Update, context: CallbackContext):
     # Функция отображения рецепта
     current_dish = context.user_data.get('current_dish')
 
+    if not current_dish:
+        query.message.reply_text("Сначала выберите блюдо!")
+        return
+
     ingredients = '\n'.join(current_dish['products'])
     recipe_steps = current_dish['recipe']
     message_text = f"**{current_dish['Name']}** 📖 Рецепт\n\n"
@@ -142,12 +159,18 @@ def show_recipe(query: Update, context: CallbackContext):
 
 
 def offer_subscription(update: Update, context: CallbackContext):
-    # Функция оферты подписки
     keyboard = [
         [InlineKeyboardButton("Оформить подписку", callback_data='subscribe')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text("Ваши бесплатные попытки закончились. Оформите подписку, чтобы продолжить получать рецепты.",
-                              reply_markup=reply_markup)
 
-
+    if hasattr(update, 'callback_query'):
+        update.callback_query.message.reply_text(
+            "Ваши бесплатные попытки закончились.\n\n"
+            "Оформите подписку, чтобы продолжить получать рецепты.",
+            reply_markup=reply_markup)
+    else:
+        update.message.reply_text(
+            "Ваши бесплатные попытки закончились.\n\n"
+            "Оформите подписку, чтобы продолжить получать рецепты.",
+            reply_markup=reply_markup)
