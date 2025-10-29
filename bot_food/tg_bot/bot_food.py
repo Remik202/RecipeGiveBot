@@ -13,8 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 load_dotenv()
-token_bot = os.getenv("RECIPE_GIVE_BOT")
-user_data = {}
+BOT_TOKEN = os.getenv("RECIPE_GIVE_BOT")
 
 
 def handle_button_click(update, context):
@@ -40,7 +39,7 @@ def handle_button_click(update, context):
 
 def main():
     """Запуск Telegram-бота"""
-    updater = Updater(token=token_bot, use_context=True)
+    updater = Updater(token=BOT_TOKEN, use_context=True)
     dispatcher = updater.dispatcher
     
     dispatcher.add_handler(CommandHandler("start", start))
@@ -55,5 +54,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
