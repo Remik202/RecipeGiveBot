@@ -8,4 +8,5 @@ sys.path.append(str(current_dir))
 
 
 if __name__ == "__main__":
-main()
+    main()
+
