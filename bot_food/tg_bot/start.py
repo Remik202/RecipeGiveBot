@@ -7,7 +7,6 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s
 logger = logging.getLogger(__name__)
 
 ATTEMPT_LIMIT = 3
-SUBSCRIBED = False
 
 
 def start(update: Update, context: CallbackContext):
@@ -24,7 +23,7 @@ def start(update: Update, context: CallbackContext):
     keyboard = [
         [
             InlineKeyboardButton("Случайное блюдо", callback_data='dish'),
-            InlineKeyboardButton("Офорить подписку", callback_data='subscribe'),
+            InlineKeyboardButton("Оформить подписку", callback_data='subscribe'),
         ],
         [InlineKeyboardButton("О нас", callback_data='info')],
     ]
@@ -35,3 +34,4 @@ def start(update: Update, context: CallbackContext):
       parse_mode='Markdown',
       reply_markup=reply_markup
     )
+
