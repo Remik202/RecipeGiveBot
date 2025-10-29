@@ -26,9 +26,9 @@ def dish(query: Update, context: CallbackContext):
         context.user_data['current_dish'] = chosen_dish
 
         relative_image_path = chosen_dish["Image"]
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-        IMAGES_FOLDER = os.path.join(BASE_DIR, "..", "demo_data", "images")
-        absolute_image_path = os.path.join(IMAGES_FOLDER, os.path.basename(relative_image_path))
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        images_folder = os.path.join(base_dir, "..", "demo_data", "images")
+        absolute_image_path = os.path.join(images_folder, os.path.basename(relative_image_path))
 
         message_text = f"🍽️ Ваше блюдо: *{chosen_dish['Name']}*"
         buttons = [
@@ -60,9 +60,9 @@ def dish(query: Update, context: CallbackContext):
             context.user_data['current_dish'] = chosen_dish
 
             relative_image_path = chosen_dish["Image"]
-            BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-            IMAGES_FOLDER = os.path.join(BASE_DIR, "..", "demo_data", "images")
-            absolute_image_path = os.path.join(IMAGES_FOLDER, os.path.basename(relative_image_path))
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            images_folder = os.path.join(base_dir, "..", "demo_data", "images")
+            absolute_image_path = os.path.join(images_folder, os.path.basename(relative_image_path))
 
             message_text = f"🍽️ Ваше блюдо: *{chosen_dish['Name']}*"
             buttons = [
@@ -119,3 +119,4 @@ def offer_subscription(update: Update, context: CallbackContext):
         "Оформите подписку, чтобы продолжить получать рецепты.",
         reply_markup=reply_markup
     )
+
