@@ -1,40 +1,55 @@
+from demo_data.demo_db import data
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 import random
 import logging
 import os
-from demo_data.demo_db import data
-from tg_bot.subscription_stats import check_subscription
-
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 def dish(query: Update, context: CallbackContext):
-    """Показывает случайное блюдо."""
+    
+    from tg_bot.subscription_stats import check_subscription
     subscribed = context.user_data.get('subscribed', False)
 
     if subscribed:
+
         all_dishes = data.copy()
-        chosen_dish_key = random.choice(list(all_dishes.keys()))
+
+        shuffled_keys = context.user_data.get('shuffled_keys', None)
+        if shuffled_keys is None:
+
+            shuffled_keys = list(all_dishes.keys())
+            random.shuffle(shuffled_keys)
+            context.user_data['shuffled_keys'] = shuffled_keys
+
+        if len(shuffled_keys) == 0:
+
+            shuffled_keys = list(all_dishes.keys())
+            random.shuffle(shuffled_keys)
+            context.user_data['shuffled_keys'] = shuffled_keys
+
+        chosen_dish_key = shuffled_keys.pop()
         chosen_dish = all_dishes[chosen_dish_key]
 
         context.user_data['current_dish'] = chosen_dish
 
         relative_image_path = chosen_dish["Image"]
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        images_folder = os.path.join(base_dir, "..", "demo_data", "images")
-        absolute_image_path = os.path.join(images_folder, os.path.basename(relative_image_path))
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+        IMAGES_FOLDER = os.path.join(BASE_DIR, "..", "demo_data", "images")
+        absolute_image_path = os.path.join(
+            IMAGES_FOLDER, os.path.basename(relative_image_path))
 
         message_text = f"🍽️ Ваше блюдо: *{chosen_dish['Name']}*"
         buttons = [
             [
-                InlineKeyboardButton("Следующее блюдо", callback_data='next_dish'),
-                InlineKeyboardButton("Показать рецепт", callback_data='show_recipe')
+                InlineKeyboardButton(
+                    "Следующее блюдо", callback_data='next_dish'),
+                InlineKeyboardButton(
+                    "Показать рецепт", callback_data='show_recipe')
             ]
         ]
         reply_markup = InlineKeyboardMarkup(buttons)
@@ -48,27 +63,46 @@ def dish(query: Update, context: CallbackContext):
                 reply_markup=reply_markup
             )
     else:
+
         attempts_left = context.user_data.get('attempts_left', 0)
 
         if attempts_left > 0:
+
             context.user_data['attempts_left'] -= 1
 
             all_dishes = data.copy()
-            chosen_dish_key = random.choice(list(all_dishes.keys()))
+
+            shuffled_keys = context.user_data.get('shuffled_keys', None)
+            if shuffled_keys is None:
+
+                shuffled_keys = list(all_dishes.keys())
+                random.shuffle(shuffled_keys)
+                context.user_data['shuffled_keys'] = shuffled_keys
+
+            if len(shuffled_keys) == 0:
+
+                shuffled_keys = list(all_dishes.keys())
+                random.shuffle(shuffled_keys)
+                context.user_data['shuffled_keys'] = shuffled_keys
+
+            chosen_dish_key = shuffled_keys.pop()
             chosen_dish = all_dishes[chosen_dish_key]
 
             context.user_data['current_dish'] = chosen_dish
 
             relative_image_path = chosen_dish["Image"]
-            base_dir = os.path.dirname(os.path.abspath(__file__))
-            images_folder = os.path.join(base_dir, "..", "demo_data", "images")
-            absolute_image_path = os.path.join(images_folder, os.path.basename(relative_image_path))
+            BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+            IMAGES_FOLDER = os.path.join(BASE_DIR, "..", "demo_data", "images")
+            absolute_image_path = os.path.join(
+                IMAGES_FOLDER, os.path.basename(relative_image_path))
 
             message_text = f"🍽️ Ваше блюдо: *{chosen_dish['Name']}*"
             buttons = [
                 [
-                    InlineKeyboardButton("Следующее блюдо", callback_data='next_dish'),
-                    InlineKeyboardButton("Показать рецепт", callback_data='show_recipe')
+                    InlineKeyboardButton(
+                        "Следующее блюдо", callback_data='next_dish'),
+                    InlineKeyboardButton(
+                        "Показать рецепт", callback_data='show_recipe')
                 ]
             ]
             reply_markup = InlineKeyboardMarkup(buttons)
@@ -82,22 +116,22 @@ def dish(query: Update, context: CallbackContext):
                     reply_markup=reply_markup
                 )
         else:
+            # Предложение оформить подписку
             offer_subscription(query, context)
 
 
 def show_recipe(query: Update, context: CallbackContext):
-    """Показывает рецепт текущего блюда."""
+    # Функция отображения рецепта
     current_dish = context.user_data.get('current_dish')
 
     ingredients = '\n'.join(current_dish['products'])
     recipe_steps = current_dish['recipe']
-    message_text = (
-        f"*{current_dish['Name']}* 📖 Рецепт\n\n"
-        f"*Ингредиенты:*\n{ingredients}\n\n"
-        f"*Пошагово:*\n{recipe_steps}"
-    )
+    message_text = f"**{current_dish['Name']}** 📖 Рецепт\n\n"
+    message_text += f"Ингредиенты:\n{ingredients}\n\n"
+    message_text += f"Пошагово:\n{recipe_steps}"
 
-    buttons = [[InlineKeyboardButton("Следующее блюдо", callback_data='next_dish')]]
+    buttons = [[InlineKeyboardButton(
+        "Следующее блюдо", callback_data='next_dish')]]
     reply_markup = InlineKeyboardMarkup(buttons)
 
     query.message.reply_text(
@@ -108,15 +142,12 @@ def show_recipe(query: Update, context: CallbackContext):
 
 
 def offer_subscription(update: Update, context: CallbackContext):
-    """Предлагает оформить подписку после исчерпания бесплатных попыток."""
+    # Функция оферты подписки
     keyboard = [
         [InlineKeyboardButton("Оформить подписку", callback_data='subscribe')]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text("Ваши бесплатные попытки закончились. Оформите подписку, чтобы продолжить получать рецепты.",
+                              reply_markup=reply_markup)
 
-    update.message.reply_text(
-        "Ваши бесплатные попытки закончились.\n"
-        "Оформите подписку, чтобы продолжить получать рецепты.",
-        reply_markup=reply_markup
-    )
 
