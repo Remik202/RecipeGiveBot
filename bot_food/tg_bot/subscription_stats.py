@@ -71,7 +71,7 @@ def subscribe(query, context):
 
     query.edit_message_text(
         text=text,
-        parse_mode="Markdown"
+        parse_mode="Markdown",
         reply_markup=reply_markup
     )
 
