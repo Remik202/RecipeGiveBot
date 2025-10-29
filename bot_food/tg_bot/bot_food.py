@@ -39,6 +39,7 @@ def handle_button_click(update, context):
 
 
 def main():
+    """Запуск Telegram-бота"""
     updater = Updater(token=token_bot, use_context=True)
     dispatcher = updater.dispatcher
     
@@ -54,4 +55,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
